@@ -1,189 +1,191 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import _ from 'lodash'
+import React, { useEffect, useMemo, useState } from "react";
+import _ from "lodash";
 
-import './App.css'
-import { items, Item } from './items'
-import { HeroBuilds } from './HeroBuilds'
+import "./App.css";
+import { items, Item } from "./items";
+import { HeroBuilds } from "./HeroBuilds";
 
-const tags = [...new Set(items.flatMap((item) => item.tags))].sort()
-const MAX_INVENTORY_SIZE = 6
+const tags = [...new Set(items.flatMap((item) => item.tags))].sort();
+const MAX_INVENTORY_SIZE = 6;
+const BASE_PATCH = "predecessorherobuilder";
 
-const getImageSrc = (name: string) => `/items/${name.split(' ').join('_')}.png`
+const getImageSrc = (name: string) =>
+  `/${BASE_PATCH}/items/${name.split(" ").join("_")}.png`;
 
-const heroBuilds = new HeroBuilds()
-heroBuilds.parseLS()
-const builds = heroBuilds.getAll()
+const heroBuilds = new HeroBuilds();
+heroBuilds.parseLS();
+const builds = heroBuilds.getAll();
 
 if (_.isEmpty(builds)) {
-  heroBuilds.create('new')
+  heroBuilds.create("new");
 }
 
 function App() {
-  const [activeItem, setActiveItem] = useState<Item | null>(null)
-  const [inventory, setInventory] = useState<Item[]>([])
-  const [filters, setFilters] = useState<string[]>([])
-  const [builds, setBuilds] = useState<Object>()
-  const [buildName, setBuildName] = useState<string>()
-  const [activeBuild, setActiveBuild] = useState<string>('')
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
+  const [inventory, setInventory] = useState<Item[]>([]);
+  const [filters, setFilters] = useState<string[]>([]);
+  const [builds, setBuilds] = useState<Object>();
+  const [buildName, setBuildName] = useState<string>();
+  const [activeBuild, setActiveBuild] = useState<string>("");
 
   useEffect(() => {
-    const builds = heroBuilds.getAll()
+    const builds = heroBuilds.getAll();
 
-    setBuilds(builds)
+    setBuilds(builds);
 
     if (!_.isEmpty(builds)) {
-      const newActiveBuild = _.keys(builds)[0]
+      const newActiveBuild = _.keys(builds)[0];
 
-      const buldItems = heroBuilds.getItems(newActiveBuild)
+      const buldItems = heroBuilds.getItems(newActiveBuild);
 
       const newInventory = _.reduce<Item, Item[]>(
         items,
         (acc, item) => {
           if (buldItems.includes(item.name)) {
-            acc.push(item)
+            acc.push(item);
           }
 
-          return acc
+          return acc;
         },
-        [],
-      )
+        []
+      );
 
-      setActiveBuild(newActiveBuild)
-      setInventory(newInventory)
+      setActiveBuild(newActiveBuild);
+      setInventory(newInventory);
     }
-  }, [])
+  }, []);
 
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    const newFilter = event.currentTarget.dataset.id
+    const newFilter = event.currentTarget.dataset.id;
 
-    if (!newFilter) return
+    if (!newFilter) return;
 
     if (filters.includes(newFilter)) {
-      setFilters([...filters.filter((f) => f !== newFilter)])
-      return
+      setFilters([...filters.filter((f) => f !== newFilter)]);
+      return;
     }
 
-    setFilters([...filters, newFilter])
-  }
+    setFilters([...filters, newFilter]);
+  };
 
   const handleItemClick = (event: React.MouseEvent<HTMLElement>) => {
-    const newItemId = event.currentTarget.dataset.id
+    const newItemId = event.currentTarget.dataset.id;
 
-    if (!newItemId) return
+    if (!newItemId) return;
 
-    const newItem = _.find(items, { name: newItemId })
+    const newItem = _.find(items, { name: newItemId });
 
-    if (!newItem) return
+    if (!newItem) return;
 
-    setActiveItem(newItem)
-  }
+    setActiveItem(newItem);
+  };
 
   const handleItemDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
-    const newItemId = event.currentTarget.dataset.id
-    const isInInventory = _.find(inventory, { name: newItemId })
+    const newItemId = event.currentTarget.dataset.id;
+    const isInInventory = _.find(inventory, { name: newItemId });
 
-    if (!newItemId || isInInventory) return
+    if (!newItemId || isInInventory) return;
 
-    const newItem = _.find(items, { name: newItemId })
+    const newItem = _.find(items, { name: newItemId });
 
-    if (!newItem) return
+    if (!newItem) return;
 
-    const isNewItemCrest = newItem.tags.includes('Crest')
+    const isNewItemCrest = newItem.tags.includes("Crest");
     const hasCrestInInventory = _.find(inventory, ({ tags }) => {
-      return tags.includes('Crest')
-    })
+      return tags.includes("Crest");
+    });
 
     if (hasCrestInInventory && isNewItemCrest) {
-      const noChrest = inventory.filter(({ tags }) => !tags.includes('Crest'))
+      const noChrest = inventory.filter(({ tags }) => !tags.includes("Crest"));
 
-      const newItems = [newItem, ...noChrest]
-      setInventory(newItems)
+      const newItems = [newItem, ...noChrest];
+      setInventory(newItems);
       heroBuilds.updateItems(
         activeBuild,
-        newItems.map((x) => x.name),
-      )
-      return
+        newItems.map((x) => x.name)
+      );
+      return;
     }
 
-    if (inventory.length === MAX_INVENTORY_SIZE) return
+    if (inventory.length === MAX_INVENTORY_SIZE) return;
 
     if (isNewItemCrest) {
-      const newItems = [newItem, ...inventory]
+      const newItems = [newItem, ...inventory];
 
-      setInventory([newItem, ...inventory])
+      setInventory([newItem, ...inventory]);
       heroBuilds.updateItems(
         activeBuild,
-        newItems.map((x) => x.name),
-      )
-      return
+        newItems.map((x) => x.name)
+      );
+      return;
     }
 
-    const newItems = [...inventory, newItem]
+    const newItems = [...inventory, newItem];
 
-    setInventory(newItems)
+    setInventory(newItems);
     heroBuilds.updateItems(
       activeBuild,
-      newItems.map((x) => x.name),
-    )
-  }
+      newItems.map((x) => x.name)
+    );
+  };
 
   const handleInventoryItemDoubleClick = (
-    event: React.MouseEvent<HTMLElement>,
+    event: React.MouseEvent<HTMLElement>
   ) => {
-    const itemId = event.currentTarget.dataset.id
+    const itemId = event.currentTarget.dataset.id;
 
-    if (!itemId) return
+    if (!itemId) return;
 
-    setInventory(_.filter(inventory, ({ name }) => name !== itemId))
-  }
+    setInventory(_.filter(inventory, ({ name }) => name !== itemId));
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    setBuildName(event.currentTarget.value)
-  }
+    setBuildName(event.currentTarget.value);
+  };
 
   const handleCreateBuild = () => {
-    if (!buildName) return
+    if (!buildName) return;
 
-    heroBuilds.create(buildName)
-    setBuilds(heroBuilds.getAll())
-  }
+    heroBuilds.create(buildName);
+    setBuilds(heroBuilds.getAll());
+  };
 
   const finalItems = useMemo(() => {
-    if (!filters.length) return items
+    if (!filters.length) return items;
 
     return items.filter((item) => {
-      if (item.tags.length < filters.length) return false
+      if (item.tags.length < filters.length) return false;
 
-      return _.size(_.intersection(item.tags, filters)) === _.size(filters)
-    })
-  }, [filters])
+      return _.size(_.intersection(item.tags, filters)) === _.size(filters);
+    });
+  }, [filters]);
 
-  const invCost = inventory.reduce((acc, cur) => (acc += cur.cost ?? 0), 0)
+  const invCost = inventory.reduce((acc, cur) => (acc += cur.cost ?? 0), 0);
 
   const invStats = useMemo(() => {
     return inventory.reduce<{ [key: string]: number }>((acc, cur) => {
-      if (!cur.stats) return acc
+      if (!cur.stats) return acc;
 
       Object.entries(cur.stats).forEach(([key, value]) => {
         if (!acc[key]) {
-          acc[key] = value
-          return
+          acc[key] = value;
+          return;
         }
 
-        acc[key] += value
-      })
+        acc[key] += value;
+      });
 
-      return acc
-    }, {})
-  }, [inventory])
+      return acc;
+    }, {});
+  }, [inventory]);
 
   const invSkills = useMemo(() => {
     return inventory.flatMap((item) => {
-      return item.skills ? item.skills : []
-    })
-  }, [inventory])
+      return item.skills ? item.skills : [];
+    });
+  }, [inventory]);
 
   return (
     <div className="app">
@@ -191,14 +193,14 @@ function App() {
         <div>
           {_.isEmpty(builds) && (
             <div>
-              <input onChange={handleChange} value={buildName ?? ''} />
+              <input onChange={handleChange} value={buildName ?? ""} />
               <button onClick={handleCreateBuild} disabled={!buildName}>
                 Create
               </button>
             </div>
           )}
           {_.keys(builds).map((name) => {
-            return <button key={name}>{name}</button>
+            return <button key={name}>{name}</button>;
           })}
         </div>
 
@@ -215,7 +217,7 @@ function App() {
               >
                 <img className="inventory-image" src={getImageSrc(inv.name)} />
               </div>
-            )
+            );
           })}
         </div>
         <div className="inventory-params">
@@ -225,7 +227,7 @@ function App() {
                 <span className="param-name">+{value}</span>
                 <span>{key}</span>
               </div>
-            )
+            );
           })}
         </div>
 
@@ -236,7 +238,7 @@ function App() {
                 <span className="skill-name">{name}: </span>
                 <span className="skill-description">{description}</span>
               </div>
-            )
+            );
           })}
         </div>
       </aside>
@@ -245,7 +247,7 @@ function App() {
           <h2 className="filter-bar-title">Filters</h2>
           <div className="filters">
             {tags.map((tag) => {
-              const isActive = filters.includes(tag)
+              const isActive = filters.includes(tag);
               return (
                 <button
                   key={tag}
@@ -253,12 +255,12 @@ function App() {
                   onClick={handleFilterClick}
                   className="filter"
                   style={{
-                    background: isActive ? '#9dbaf1' : 'white',
+                    background: isActive ? "#9dbaf1" : "white",
                   }}
                 >
                   {tag}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -275,7 +277,7 @@ function App() {
               >
                 <img className="inventory-image" src={getImageSrc(item.name)} />
               </div>
-            )
+            );
           })}
         </div>
       </main>
@@ -295,7 +297,7 @@ function App() {
                       <span className="param-name">+{value}</span>
                       <span>{key}</span>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -311,14 +313,14 @@ function App() {
                       {skill.description}
                     </span>
                   </div>
-                )
+                );
               })}
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
